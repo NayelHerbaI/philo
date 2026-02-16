@@ -6,7 +6,7 @@
 /*   By: jihi <jihi@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/16 15:29:57 by jihi              #+#    #+#             */
-/*   Updated: 2026/02/16 18:35:15 by jihi             ###   ########.fr       */
+/*   Updated: 2026/02/16 19:28:09 by jihi             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,23 +17,26 @@
 # include <stdlib.h>
 # include <pthread.h>
 # include <unistd.h>
-// # include <stdio.h>
 
 typedef struct s_data
 {
-	int	nb_philo;
-	int	t_to_die;
-	int	t_to_eat;
-	int	t_to_think;
-	int	nb_meals;
+	long	nb_philo;
+	long	t_to_die;
+	long	t_to_eat;
+	long	t_to_sleep;
+	long	nb_meals;
 }	t_data;
 
 // Utils
 
 void	ft_putchar(char c);
-void	ft_putstr(char *str);
+int		ft_putstr(char *str, int return_value);
 void	ft_putnbr(int nb);
-int		ft_atoi(char *s);
+long	ft_atoi(char *s);
 int		ft_isdigits(char *s);
+
+// Setup
+
+int		setup(int ac, char **av, t_data *data);
 
 #endif
