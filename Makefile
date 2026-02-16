@@ -1,30 +1,42 @@
-CC      := cc
-CFLAGS  := -Wall -Wextra -Werror
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: jihi <jihi@student.42.fr>                  +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2026/02/16 18:34:29 by jihi              #+#    #+#              #
+#    Updated: 2026/02/16 18:36:52 by jihi             ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
 
-NAME    := philo
+NAME	=	philo
 
-OBJDIR  := obj
+SRC		=	src/main.c						\
+			src/utils.c						\
+			
+OBJ_DIR	=	obj
+OBJ		=	$(SRC:src/%.c=$(OBJ_DIR)/%.o)
 
-SRCS := main.c 
-
-OBJS := $(SRCS:%.c=$(OBJDIR)/%.o)
+CC		=	cc
+CFLAGS	=	-Wall -Wextra -Werror -g -I include
+HEADERS	=	-Iincludes
+RM		=	rm -rf
 
 all: $(NAME)
 
-philo: $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $@
+$(NAME): $(OBJ)
+	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
 
-$(OBJDIR)/%.o: %.c | $(OBJDIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJDIR):
-	mkdir -p $(OBJDIR)
+$(OBJ_DIR)/%.o: src/%.c
+	mkdir -p $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(HEADERS) -c $< -o $@
 
 clean:
-	rm -rf $(OBJDIR)
+	$(RM) $(OBJ_DIR)
 
 fclean: clean
-	rm -f $(NAME)
+	$(RM) $(NAME)
 
 re: fclean all
 
