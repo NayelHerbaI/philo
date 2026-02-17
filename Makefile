@@ -6,7 +6,7 @@
 #    By: jihi <jihi@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/02/16 18:34:29 by jihi              #+#    #+#              #
-#    Updated: 2026/02/16 18:57:09 by jihi             ###   ########.fr        #
+#    Updated: 2026/02/17 11:38:55 by jihi             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,6 +15,9 @@ NAME	=	philo
 SRC		=	src/main.c						\
 			src/utils.c						\
 			src/setup.c						\
+			src/time.c						\
+			src/stop.c						\
+			src/print_safe.c				\
 			
 OBJ_DIR	=	obj
 OBJ		=	$(SRC:src/%.c=$(OBJ_DIR)/%.o)

@@ -6,7 +6,7 @@
 /*   By: jihi <jihi@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/16 18:26:36 by jihi              #+#    #+#             */
-/*   Updated: 2026/02/16 19:25:24 by jihi             ###   ########.fr       */
+/*   Updated: 2026/02/17 11:11:36 by jihi             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ int	ft_putstr(char *str, int return_value)
 	return (return_value);
 }
 
-void	ft_putnbr(int nb)
+void	ft_putnbr(long nb)
 {
 	if (nb > 9)
 		ft_putnbr(nb / 10);
