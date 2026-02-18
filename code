@@ -6,7 +6,7 @@
 /*   By: jihi <jihi@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/16 15:29:57 by jihi              #+#    #+#             */
-/*   Updated: 2026/02/17 10:42:54 by jihi             ###   ########.fr       */
+/*   Updated: 2026/02/18 16:02:26 by jihi             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,28 +24,47 @@ typedef struct s_timers
 	long	start;
 }	t_timers;
 
+typedef struct s_init
+{
+	int	alloc_forks;
+	int	init_forks;
+	int m_stop;
+	int m_print;
+}	t_init;
+
 typedef struct s_data
 {
-	long		nb_philo;
-	long		t_to_die;
-	long		t_to_eat;
-	long		t_to_sleep;
-	long		nb_meals;
-	t_timers	timers;
+	long			nb_philo;
+	long			t_to_die;
+	long			t_to_eat;
+	long			t_to_sleep;
+	long			nb_meals;
+	int				stop;
+	t_timers		timers;
+	t_init			init;
+	pthread_mutex_t	m_stop;
+	pthread_mutex_t	m_print;
+	pthread_mutex_t	*forks;
 }	t_data;
 
 // Utils
 
 void	ft_putchar(char c);
 int		ft_putstr(char *str, int return_value);
-void	ft_putnbr(int nb);
+void	ft_putnbr(long nb);
 long	ft_atoi(char *s);
 int		ft_isdigits(char *s);
+void	clean_everything(t_data *data);
 
 // Time
 
 long	get_time(void);
 long	elapsed_time(t_data *data);
+
+// Stop
+
+void	set_stop(t_data *data, int v);
+int		get_stop(t_data *data);
 
 // Setup
 
@@ -59,7 +78,7 @@ int		setup(int ac, char **av, t_data *data);
 /*   By: jihi <jihi@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/16 15:29:05 by jihi              #+#    #+#             */
-/*   Updated: 2026/02/16 19:28:22 by jihi             ###   ########.fr       */
+/*   Updated: 2026/02/18 16:01:41 by jihi             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,6 +114,31 @@ int	error_handler(int ac, char **av)
 	return (0);
 }
 
+void	clean_everything(t_data *data)
+{
+	int	i;
+
+	i = 0;
+	if (data->init.alloc_forks)
+	{
+		if (data->init.init_forks)
+		{
+			while (i < data->nb_philo)
+			{
+				pthread_mutex_destroy(&data->forks[i]);
+				i++;
+			}
+		}
+		free(data->forks);
+	}
+	if (data->init.m_print)
+		pthread_mutex_destroy(&data->m_print);
+	if (data->init.m_stop)
+		pthread_mutex_destroy(&data->m_stop);
+	if (data)
+		free(data);
+}
+
 int	main(int ac, char **av)
 {
 	t_data	*data;
@@ -106,7 +150,46 @@ int	main(int ac, char **av)
 		return (ft_putstr("Malloc error\n", -1));
 	if (setup(ac, av, data))
 		return (ft_putstr("Setup error\n", -1));
+	clean_everything(data);
 	return (0);
+}
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   print_safe.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jihi <jihi@student.42.fr>                  +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/02/17 11:05:13 by jihi              #+#    #+#             */
+/*   Updated: 2026/02/17 11:37:06 by jihi             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "philo.h"
+
+void	print_message(long time, int id, char *msg)
+{
+	ft_putnbr(time);
+	ft_putchar(' ');
+	ft_putnbr(id);
+	ft_putchar(' ');
+	ft_putstr(msg, 0);
+	ft_putchar('\n');
+}
+
+void	print_death(t_data *data, int id)
+{
+	pthread_mutex_lock(&data->m_print);
+	print_message(elapsed_time(data), id, "died");
+	pthread_mutex_unlock(&data->m_print);
+}
+
+void	print_state(t_data *data, int id, char *msg)
+{
+	pthread_mutex_lock(&data->m_print);
+	if (!get_stop(data))
+		print_message(elapsed_time(data), id, msg);
+	pthread_mutex_unlock(&data->m_print);
 }
 /* ************************************************************************** */
 /*                                                                            */
@@ -116,7 +199,7 @@ int	main(int ac, char **av)
 /*   By: jihi <jihi@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/16 18:51:30 by jihi              #+#    #+#             */
-/*   Updated: 2026/02/17 10:42:16 by jihi             ###   ########.fr       */
+/*   Updated: 2026/02/18 16:07:10 by jihi             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,12 +216,90 @@ static void	setup_vars(int ac, char **av, t_data *data)
 	else
 		data->nb_meals = -1;
 	data->timers.start = get_time();
+	data->stop = 0;
+	data->init.alloc_forks = 0;
+	data->init.init_forks = 0;
+	data->init.m_print = 0;
+	data->init.m_stop = 0;
+}
+
+static int	failed_forks(t_data *data, long init)
+{
+	long	i;
+
+	i = 0;
+	while (i < init)
+	{
+		pthread_mutex_destroy(&data->forks[i]);
+		i++;
+	}
+	return (1);
+}
+
+static int	setup_threads_mutexes(t_data *data)
+{
+	long	i;
+
+	i = 0;
+	data->forks = malloc(sizeof(pthread_mutex_t) * data->nb_philo);
+	if (!data->forks)
+		return (1);
+	data->init.alloc_forks = 1;
+	if (pthread_mutex_init(&data->m_stop, NULL))
+		return (1);
+	data->init.m_stop = 1;
+	if (pthread_mutex_init(&data->m_print, NULL))
+		return (1);
+	data->init.m_print = 1;
+	while (i < data->nb_philo)
+	{
+		if (pthread_mutex_init(&data->forks[i], NULL))
+			return (failed_forks(data, i));
+		i++;
+	}
+	data->init.init_forks = 1;
+	return (0);
 }
 
 int	setup(int ac, char **av, t_data *data)
 {
 	setup_vars(ac, av, data);
+	if (setup_threads_mutexes(data))
+	{
+		clean_everything(data);
+		return (1);
+	}
 	return (0);
+}
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   stop.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jihi <jihi@student.42.fr>                  +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/02/17 10:48:11 by jihi              #+#    #+#             */
+/*   Updated: 2026/02/17 11:37:22 by jihi             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "philo.h"
+
+int	get_stop(t_data *data)
+{
+	int	value;
+
+	pthread_mutex_lock(&data->m_stop);
+	value = data->stop;
+	pthread_mutex_unlock(&data->m_stop);
+	return (value);
+}
+
+void	set_stop(t_data *data, int v)
+{
+	pthread_mutex_lock(&data->m_stop);
+	data->stop = v;
+	pthread_mutex_unlock(&data->m_stop);
 }
 /* ************************************************************************** */
 /*                                                                            */
@@ -148,7 +309,7 @@ int	setup(int ac, char **av, t_data *data)
 /*   By: jihi <jihi@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/17 10:26:56 by jihi              #+#    #+#             */
-/*   Updated: 2026/02/17 10:41:37 by jihi             ###   ########.fr       */
+/*   Updated: 2026/02/17 11:38:19 by jihi             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,15 +318,16 @@ int	setup(int ac, char **av, t_data *data)
 long	get_time(void)
 {
 	struct timeval	t;
-	
+
 	gettimeofday(&t, NULL);
-    return ((t.tv_sec * 1000) + (t.tv_usec / 1000));
+	return ((t.tv_sec * 1000) + (t.tv_usec / 1000));
 }
 
 long	elapsed_time(t_data *data)
 {
 	return (get_time() - data->timers.start);
-}/* ************************************************************************** */
+}
+/* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
@@ -173,7 +335,7 @@ long	elapsed_time(t_data *data)
 /*   By: jihi <jihi@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/16 18:26:36 by jihi              #+#    #+#             */
-/*   Updated: 2026/02/16 19:25:24 by jihi             ###   ########.fr       */
+/*   Updated: 2026/02/17 11:11:36 by jihi             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -194,7 +356,7 @@ int	ft_putstr(char *str, int return_value)
 	return (return_value);
 }
 
-void	ft_putnbr(int nb)
+void	ft_putnbr(long nb)
 {
 	if (nb > 9)
 		ft_putnbr(nb / 10);

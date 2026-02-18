@@ -6,7 +6,7 @@
 #    By: jihi <jihi@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/02/16 18:34:29 by jihi              #+#    #+#              #
-#    Updated: 2026/02/17 11:38:55 by jihi             ###   ########.fr        #
+#    Updated: 2026/02/18 18:17:59 by jihi             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,6 +18,10 @@ SRC		=	src/main.c						\
 			src/time.c						\
 			src/stop.c						\
 			src/print_safe.c				\
+			src/routine.c					\
+			src/threads.c					\
+			src/forks.c						\
+			src/eat.c						\
 			
 OBJ_DIR	=	obj
 OBJ		=	$(SRC:src/%.c=$(OBJ_DIR)/%.o)
