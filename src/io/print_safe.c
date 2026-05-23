@@ -6,20 +6,15 @@
 /*   By: jihi <jihi@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/17 11:05:13 by jihi              #+#    #+#             */
-/*   Updated: 2026/02/17 11:37:06 by jihi             ###   ########.fr       */
+/*   Updated: 2026/05/23 02:00:00 by jihi             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-void	print_message(long time, int id, char *msg)
+static void	print_message(long time, int id, char *msg)
 {
-	ft_putnbr(time);
-	ft_putchar(' ');
-	ft_putnbr(id);
-	ft_putchar(' ');
-	ft_putstr(msg, 0);
-	ft_putchar('\n');
+	printf("%ld %d %s\n", time, id, msg);
 }
 
 void	print_death(t_data *data, int id)

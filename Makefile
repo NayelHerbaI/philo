@@ -1,50 +1,46 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: jihi <jihi@student.42.fr>                  +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2026/02/16 18:34:29 by jihi              #+#    #+#              #
-#    Updated: 2026/02/18 18:17:59 by jihi             ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
+NAME = philo
 
-NAME	=	philo
+CC = cc
+CFLAGS = -Wall -Wextra -Werror -g
+INC = -I include
+SRC_DIR = src
+OBJ_DIR = obj
 
-SRC		=	src/main.c						\
-			src/utils.c						\
-			src/setup.c						\
-			src/time.c						\
-			src/stop.c						\
-			src/print_safe.c				\
-			src/routine.c					\
-			src/threads.c					\
-			src/forks.c						\
-			src/eat.c						\
-			
-OBJ_DIR	=	obj
-OBJ		=	$(SRC:src/%.c=$(OBJ_DIR)/%.o)
+SRCS = \
+	core/main.c \
+	core/cleanup.c \
+	init/setup.c \
+	init/setup_forks.c \
+	init/setup_philos.c \
+	sync/stop.c \
+	sync/monitor.c \
+	simulation/threads.c \
+	simulation/routine.c \
+	simulation/sleep.c \
+	simulation/schedule.c \
+	simulation/forks.c \
+	simulation/forks_wait.c \
+	simulation/eat.c \
+	io/print_safe.c \
+	utils/time.c \
+	utils/utils.c
 
-CC		=	cc
-CFLAGS	=	-Wall -Wextra -Werror -g -I include
-HEADERS	=	-Iincludes
-RM		=	rm -rf
+OBJS = $(addprefix $(OBJ_DIR)/,$(SRCS:.c=.o))
 
 all: $(NAME)
 
-$(NAME): $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+$(NAME): $(OBJS)
+	$(CC) $(CFLAGS) $(INC) $(OBJS) -o $(NAME)
 
-$(OBJ_DIR)/%.o: src/%.c
-	mkdir -p $(OBJ_DIR)
-	$(CC) $(CFLAGS) $(HEADERS) -c $< -o $@
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c include/philo.h
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INC) -c $< -o $@
 
 clean:
-	$(RM) $(OBJ_DIR)
+	rm -rf $(OBJ_DIR)
 
 fclean: clean
-	$(RM) $(NAME)
+	rm -f $(NAME)
 
 re: fclean all
 
